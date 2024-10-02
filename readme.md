@@ -1,6 +1,6 @@
-= CS251 9-instruction ARM Simulator
+# CS251 9-instruction ARM Simulator
 
-== Compilation
+## Compilation
 
 To compile, have a recent version of Rust installed (this was developed
 using Rust 1.80.0).
@@ -22,7 +22,7 @@ The executable (assuming you ran the above command) will be found at:
 ./target/release/cs251simulator[.exe]
 ```
 
-== Usage
+## Usage
 
 There are two main commands you can run when launching it from the command-line:
 - `load` allows you to load a file saved with this program into the UI.
