@@ -37,3 +37,9 @@ There are two main commands you can run when launching it from the command-line:
   ```
 
 Specifying no arguments will bring up the UI with an empty state.
+
+When in the UI, key bindings are listed in the bottom row of the screen.
+
+--------
+
+Please let me know (via an issue or an email) if you find an issue with this.
