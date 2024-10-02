@@ -1,0 +1,42 @@
+// Simple PEST grammar
+digit = _{ '0'..'9' }
+pos_number = { digit+ }
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
+register_x = _{ "X" }
+register = { register_x ~ (pos_number | "ZR" ) }
+
+delim = _{ WHITESPACE* ~ "," ~ WHITESPACE* }
+
+literal_hash = { "#" }
+literal_num = ${ "-"? ~ pos_number }
+literal = @{ literal_hash ~ literal_num }
+
+offset = { "[" ~ register ~ delim ~ literal ~ "]" }
+
+add = ${ "ADD" ~ WHITESPACE+ ~ register ~ delim ~ register ~ delim ~ register }
+sub = ${ "SUB" ~ WHITESPACE+ ~ register ~ delim ~ register ~ delim ~ register }
+addi = ${ "ADDI" ~ WHITESPACE+ ~ register ~ delim ~ register ~ delim ~ literal }
+subi = ${ "SUBI" ~ WHITESPACE+ ~ register ~ delim ~ register ~ delim ~ literal }
+ldur = ${ "LDUR" ~ WHITESPACE+ ~ register ~ delim ~ offset }
+stur = ${ "STUR" ~ WHITESPACE+ ~ register ~ delim ~ offset }
+branch = ${ "B" ~ WHITESPACE+ ~ literal }
+cbz = ${ "CBZ" ~ WHITESPACE+ ~ register ~ delim ~ literal }
+cbnz = ${ "CBNZ" ~ WHITESPACE+ ~ register ~ delim ~ literal }
+
+instruction = {
+	add | sub | addi | subi | ldur | stur | branch | cbz | cbnz
+}
+
+comment_slashes = _{ "//" }
+comment_rest = { ANY* }
+
+comment = ${ comment_slashes ~ comment_rest }
+
+full_line = {
+	comment | instruction
+}
+
+line = {
+	SOI ~ WHITESPACE* ~ full_line ~ WHITESPACE* ~ EOI
+}
