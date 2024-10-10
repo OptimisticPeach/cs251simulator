@@ -55,6 +55,7 @@ impl Tui {
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
+        terminal.draw(|frame| self.draw(frame))?;
         while self.running {
             self.handle_events()?;
             terminal.draw(|frame| self.draw(frame))?;
@@ -81,7 +82,7 @@ impl Tui {
             } => self.running = false,
 
             Input {
-                key: Key::Char(' '),
+                key: Key::Char('w'),
                 ctrl: true,
                 ..
             } => self.picking = true,
@@ -245,7 +246,7 @@ impl Tui {
         let default = if self.picking {
             [("<Ctrl> <Q>", "Quit"), ("<L>", "Load"), ("<S>", "Save")][..].into_iter()
         } else {
-            [("<Ctrl> <Q>", "Quit"), ("<Ctrl> <Space>", "Window")][..].into_iter()
+            [("<Ctrl> <Q>", "Quit"), ("<Ctrl> <W>", "Window")][..].into_iter()
         };
 
         let window = match &self.focus {
