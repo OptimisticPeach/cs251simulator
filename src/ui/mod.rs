@@ -243,9 +243,9 @@ impl Tui {
 
     fn get_commands(&self) -> impl Iterator<Item = (&'static str, &'static str)> + 'static {
         let default = if self.picking {
-            [("<L>", "Load"), ("<S>", "Save")][..].into_iter()
+            [("<Ctrl> <Q>", "Quit"), ("<L>", "Load"), ("<S>", "Save")][..].into_iter()
         } else {
-            [("<Ctrl> <Space>", "Window")][..].into_iter()
+            [("<Ctrl> <Q>", "Quit"), ("<Ctrl> <Space>", "Window")][..].into_iter()
         };
 
         let window = match &self.focus {
