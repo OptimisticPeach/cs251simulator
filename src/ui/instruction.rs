@@ -76,15 +76,34 @@ impl Widget for InstructionUI<'_> {
 
         let text = Text::from(lines.collect::<Vec<_>>());
 
-        let height_explanation = if self.registers.pc as usize >= self.instrs.len() {
-            0
-        } else {
-            4
+        let instruction_to_explain = self.instrs.get(self.registers.pc as usize).map(|x| {
+            if let Some(InstructionUIState {
+                text: Some(text), ..
+            }) = self.state
+            {
+                let parsed = text.lines()[0].parse::<Instruction>();
+
+                match parsed {
+                    Ok(x) => Ok(x),
+                    Err(e) => Err(e.to_string()),
+                }
+            } else {
+                Ok(x.clone())
+            }
+        });
+
+        let height_explanation = match &instruction_to_explain {
+            None => 0,
+            Some(Ok(_)) => 4,
+            Some(Err(e)) => 2 + e.lines().count(),
         };
 
         let vert_layout = Layout::default()
             .direction(ratatui::layout::Direction::Vertical)
-            .constraints([Constraint::Fill(1), Constraint::Length(height_explanation)])
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(height_explanation as u16),
+            ])
             .split(block.inner(area));
 
         let instrs_layout = Layout::default()
@@ -99,30 +118,20 @@ impl Widget for InstructionUI<'_> {
 
         Paragraph::new(text).render(instrs_layout[1], buf);
 
-        if let Some(instr) = self.instrs.get(self.registers.pc as usize) {
-            let mut explanation = InstructionExplanation {
-                instr,
+        if let Some(instr_or_err) = instruction_to_explain {
+            let by_ref = instr_or_err.as_ref().map_err(|x| &**x);
+            let explanation = InstructionExplanation {
+                instr: by_ref,
                 registers: self.registers,
                 memory: self.memory,
             };
 
-            let text_instr;
-
-            if let Some(InstructionUIState {
-                text: Some(text), ..
-            }) = self.state
-            {
-                if let Ok(instr) = text.lines()[0].parse::<Instruction>() {
-                    text_instr = instr;
-                } else {
-                    text_instr = Instruction::None;
-                }
-                explanation.instr = &text_instr;
-            }
-
             explanation.render(vert_layout[1], buf);
 
-            if let Some(target) = instr.highlighted_instr(self.registers.pc) {
+            if let Some(target) = by_ref
+                .ok()
+                .and_then(|x| x.highlighted_instr(self.registers.pc))
+            {
                 let target_pos = Layout::default()
                     .direction(ratatui::layout::Direction::Vertical)
                     .constraints([
@@ -166,7 +175,7 @@ impl Widget for InstructionUI<'_> {
 
 #[derive(Copy, Clone)]
 struct InstructionExplanation<'a> {
-    instr: &'a Instruction,
+    instr: Result<&'a Instruction, &'a str>,
     registers: &'a Registers,
     memory: &'a Memory,
 }
@@ -177,10 +186,17 @@ impl<'a> Widget for InstructionExplanation<'a> {
 
         let block = Block::bordered().title(title).border_set(border::ROUNDED);
 
-        let text = Text::from(vec![
-            Line::from(self.instr.explain_unsub()),
-            Line::from(self.instr.explain_sub(self.registers, self.memory)),
-        ]);
+        let text = match self.instr {
+            Ok(instr) => Text::from(vec![
+                Line::from(instr.explain_unsub()),
+                Line::from(instr.explain_sub(self.registers, self.memory)),
+            ]),
+            Err(t) => Text::from(
+                t.lines()
+                    .map(|x| Line::from(x.red().bold()))
+                    .collect::<Vec<_>>(),
+            ),
+        };
 
         Paragraph::new(text).block(block).render(area, buf)
     }

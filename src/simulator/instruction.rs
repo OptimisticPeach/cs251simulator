@@ -208,12 +208,12 @@ impl std::str::FromStr for Instruction {
             _ => panic!("{:?}", rule),
         };
 
-        result
+        result.and_then(Instruction::validate)
     }
 }
 
 impl Instruction {
-    pub fn validate(self) -> Result<Option<Self>> {
+    pub fn validate(self) -> Result<Self> {
         use Instruction::*;
 
         match self {
@@ -240,7 +240,7 @@ impl Instruction {
             _ => {}
         }
 
-        Ok(Some(self))
+        Ok(self)
     }
 
     pub fn get_line(&self) -> Vec<Span> {
